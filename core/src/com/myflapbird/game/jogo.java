@@ -3,7 +3,12 @@ package com.myflapbird.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.Random;
@@ -20,6 +25,8 @@ public class jogo extends ApplicationAdapter {
 	//Movimentação
 	private int movimentaY = 0;
 	private int movimentaX = 0;
+
+	private int pontos = 0;
 
 	//Variaveis para obter o tamanho do celular/emulador
 	private float larguraDispositivo;
@@ -39,6 +46,13 @@ public class jogo extends ApplicationAdapter {
 	private float posicaoCanoVertical;
 	
 	private Random random;
+	BitmapFont textoPontuacao;
+	private boolean passouCano = false;
+
+	private ShapeRenderer shapeRenderer;
+	private Circle circuloPassaro;
+	private Rectangle retanguloCanoCima;
+	private Rectangle retanguloCanoBaixo;
 
 	@Override
 	public void create () {
@@ -79,7 +93,7 @@ public class jogo extends ApplicationAdapter {
 
 		//inicializa os canos no canto direito
 		posicaoCanohorizontal = larguraDispositivo;
-		espacoEntreCanos = 150;
+		espacoEntreCanos = 350;
 
 	}
 
@@ -87,8 +101,31 @@ public class jogo extends ApplicationAdapter {
 	public void render () {
 
 		verificarEstadoJogo();
+		validarPontos();
 		desenharTexturas();
+		detectarColisao();
 
+	}
+
+	private void detectarColisao() {
+
+		//Circulo colider do passaro
+		circuloPassaro.set(50 + passaros[0].getWidth() / 2, posicaoInicialVerticalPassaro + passaros[0].getHeight() / 2, passaros[0].getWidth() / 2);
+
+		//Colider do cano topo
+		retanguloCanoCima.set(posicaoCanohorizontal, alturaDispositivo / 2 - canoTopo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical,
+				canoTopo.getWidth(), canoTopo.getHeight());
+
+		//colider do cano baixo
+		retanguloCanoBaixo.set(posicaoCanohorizontal, alturaDispositivo / 2 - canoBaixo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical,
+				canoBaixo.getWidth(), canoBaixo.getHeight());
+
+		boolean colisaoCanoCima = Intersector.overlaps(circuloPassaro, retanguloCanoCima);
+		boolean colisaoCanoBaixo = Intersector.overlaps(circuloPassaro, retanguloCanoBaixo);
+
+//		if(colisaoCanoBaixo || colisaoCanoCima) {
+//
+//		}
 	}
 
 	private void verificarEstadoJogo() {
@@ -98,6 +135,7 @@ public class jogo extends ApplicationAdapter {
 		if(posicaoCanohorizontal < - canoBaixo.getWidth()){
 			posicaoCanohorizontal = larguraDispositivo;
 			posicaoCanohorizontal = random.nextInt(400) - 200;
+			passouCano = false;
 		}
 
 		//Verifica se teve toque na tela
@@ -123,17 +161,29 @@ public class jogo extends ApplicationAdapter {
 		movimentaX++;
 	}
 
+	private void validarPontos() {
+		if(posicaoCanohorizontal < 50 - passaros[0].getWidth()) {
+			if(!passouCano) {
+				pontos++;
+				passouCano = true;
+			}
+		}
+	}
+
 	private void desenharTexturas() {
 		//Inicio da Renderização
 		batch.begin();
 
 		//O que será desenhado e a sua posição no dispositivo
 		batch.draw(fundo, 0,0, larguraDispositivo, alturaDispositivo);
-		batch.draw(passaros[(int) variacao], 0, posicaoInicialVerticalPassaro);
+		batch.draw(passaros[(int) variacao], 50, posicaoInicialVerticalPassaro);
 
 		//Realiza o desenho dos canos
 		batch.draw(canoBaixo, posicaoCanohorizontal - 100, alturaDispositivo / 2 - canoBaixo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical);
 		batch.draw(canoTopo, posicaoCanohorizontal - 100, alturaDispositivo / 2 + espacoEntreCanos / 2 + posicaoCanoVertical);
+
+		// realiza o desenho dos pontos na tela
+		textoPontuacao.draw(batch, String.valueOf(pontos), larguraDispositivo / 2, alturaDispositivo - 100);
 
 		//fim da renderização
 		batch.end();
