@@ -2,6 +2,7 @@ package com.myflapbird.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -44,14 +45,25 @@ public class jogo extends ApplicationAdapter {
 	private float espacoEntreCanos;
 	//Variavel para a posicao do cano vertical
 	private float posicaoCanoVertical;
-	
+
+	//Variavel para geração de valor aleatorio
 	private Random random;
+	//Variavel para o texto de pontuação
 	BitmapFont textoPontuacao;
+
+	//variavel para indicar se o passaro passou entre os canos
 	private boolean passouCano = false;
 
+	//
 	private ShapeRenderer shapeRenderer;
+
+	//Circulo de colider para o passaro
 	private Circle circuloPassaro;
+
+	//Retangulo para o colider do cano parte de cima
 	private Rectangle retanguloCanoCima;
+
+	//Retangulo para o colider do cano parte de baixo
 	private Rectangle retanguloCanoBaixo;
 
 	@Override
@@ -95,6 +107,11 @@ public class jogo extends ApplicationAdapter {
 		posicaoCanohorizontal = larguraDispositivo;
 		espacoEntreCanos = 350;
 
+		//Inicializa o texto de pontuação no jogo
+		textoPontuacao = new BitmapFont();
+		textoPontuacao.setColor(Color.WHITE);
+		textoPontuacao.getData().setScale(10);
+
 	}
 
 	@Override
@@ -109,14 +126,14 @@ public class jogo extends ApplicationAdapter {
 
 	private void detectarColisao() {
 
-		//Circulo colider do passaro
+		//Posicionamento do Circulo colider do passaro
 		circuloPassaro.set(50 + passaros[0].getWidth() / 2, posicaoInicialVerticalPassaro + passaros[0].getHeight() / 2, passaros[0].getWidth() / 2);
 
-		//Colider do cano topo
+		//Posicionamento do Colider do cano topo
 		retanguloCanoCima.set(posicaoCanohorizontal, alturaDispositivo / 2 - canoTopo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical,
 				canoTopo.getWidth(), canoTopo.getHeight());
 
-		//colider do cano baixo
+		//Posicionamento do colider do cano baixo
 		retanguloCanoBaixo.set(posicaoCanohorizontal, alturaDispositivo / 2 - canoBaixo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical,
 				canoBaixo.getWidth(), canoBaixo.getHeight());
 
