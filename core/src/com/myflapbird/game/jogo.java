@@ -22,12 +22,16 @@ public class jogo extends ApplicationAdapter {
 	private Texture fundo;
 	private Texture canoTopo;
 	private Texture canoBaixo;
+	private Texture gameover;
 
 	//Movimentação
 	private int movimentaY = 0;
 	private int movimentaX = 0;
 
+	//Pontuação do jogo
 	private int pontos = 0;
+	//Estado do jogo
+	private int estadoJogo = 0;
 
 	//Variaveis para obter o tamanho do celular/emulador
 	private float larguraDispositivo;
@@ -48,13 +52,16 @@ public class jogo extends ApplicationAdapter {
 
 	//Variavel para geração de valor aleatorio
 	private Random random;
+
 	//Variavel para o texto de pontuação
 	BitmapFont textoPontuacao;
+	BitmapFont textoReiniciar;
+	BitmapFont textoMelhorPontuacao;
+
 
 	//variavel para indicar se o passaro passou entre os canos
 	private boolean passouCano = false;
 
-	//
 	private ShapeRenderer shapeRenderer;
 
 	//Circulo de colider para o passaro
@@ -91,6 +98,12 @@ public class jogo extends ApplicationAdapter {
 		//Textura do cano
 		canoBaixo = new Texture("cano_baixo_maior.png");
 		canoTopo = new Texture("cano_topo_maior.png");
+
+		gameover = new Texture("game_over.png");
+
+
+
+
 	}
 
 	private void inicializarObjetos() {
@@ -112,6 +125,20 @@ public class jogo extends ApplicationAdapter {
 		textoPontuacao.setColor(Color.WHITE);
 		textoPontuacao.getData().setScale(10);
 
+		textoMelhorPontuacao = new BitmapFont();
+		textoMelhorPontuacao.setColor(Color.GREEN);
+		textoMelhorPontuacao.getData().setScale(2);
+
+		textoReiniciar = new BitmapFont();
+		textoReiniciar.setColor(Color.RED);
+		textoReiniciar.getData().setScale(2);
+
+		//Inicializa os coliders
+		shapeRenderer = new ShapeRenderer();
+		circuloPassaro = new Circle();
+		retanguloCanoCima = new Rectangle();
+		retanguloCanoBaixo = new Rectangle();
+
 	}
 
 	@Override
@@ -130,7 +157,7 @@ public class jogo extends ApplicationAdapter {
 		circuloPassaro.set(50 + passaros[0].getWidth() / 2, posicaoInicialVerticalPassaro + passaros[0].getHeight() / 2, passaros[0].getWidth() / 2);
 
 		//Posicionamento do Colider do cano topo
-		retanguloCanoCima.set(posicaoCanohorizontal, alturaDispositivo / 2 - canoTopo.getHeight() - espacoEntreCanos / 2 + posicaoCanoVertical,
+		retanguloCanoCima.set(posicaoCanohorizontal, alturaDispositivo / 2 + espacoEntreCanos / 2 + posicaoCanoVertical,
 				canoTopo.getWidth(), canoTopo.getHeight());
 
 		//Posicionamento do colider do cano baixo
@@ -140,42 +167,50 @@ public class jogo extends ApplicationAdapter {
 		boolean colisaoCanoCima = Intersector.overlaps(circuloPassaro, retanguloCanoCima);
 		boolean colisaoCanoBaixo = Intersector.overlaps(circuloPassaro, retanguloCanoBaixo);
 
-//		if(colisaoCanoBaixo || colisaoCanoCima) {
-//
-//		}
+		if(colisaoCanoBaixo || colisaoCanoCima) {
+			estadoJogo = 2;
+		}
 	}
 
 	private void verificarEstadoJogo() {
 
-		//Realiza a movimentação dos canos horizontal
-		posicaoCanohorizontal -= Gdx.graphics.getDeltaTime() * 200;
-		if(posicaoCanohorizontal < - canoBaixo.getWidth()){
-			posicaoCanohorizontal = larguraDispositivo;
-			posicaoCanohorizontal = random.nextInt(400) - 200;
-			passouCano = false;
-		}
-
 		//Verifica se teve toque na tela
 		boolean toqueTela = Gdx.input.justTouched();
 
-		//Realiza um salto na vertical
-		if(Gdx.input.justTouched()) {
-			gravidade = -25;
+		if(estadoJogo == 0) {
+			//Realiza um salto na vertical
+			if(Gdx.input.justTouched()) {
+				gravidade = -25;
+				estadoJogo = 1;
+			}
+		} else if (estadoJogo == 1) {
+			if(Gdx.input.justTouched()) {
+				gravidade = -25;
+			}
+
+			//Realiza a movimentação dos canos horizontal
+			posicaoCanohorizontal -= Gdx.graphics.getDeltaTime() * 200;
+			if(posicaoCanohorizontal < - canoBaixo.getWidth()){
+				posicaoCanohorizontal = larguraDispositivo;
+				posicaoCanohorizontal = random.nextInt(400) - 200;
+				passouCano = false;
+			}
+
+			//Realiza a função da gravidade no passaro
+			if(posicaoInicialVerticalPassaro > 0 || toqueTela)
+				posicaoInicialVerticalPassaro = posicaoInicialVerticalPassaro - gravidade;
+
+			gravidade++;
+		} else if (estadoJogo == 2) {
+
 		}
-		//Realiza a função da gravidade no passaro
-		if(posicaoInicialVerticalPassaro > 0 || toqueTela)
-			posicaoInicialVerticalPassaro = posicaoInicialVerticalPassaro - gravidade;
 
-		//Realiza a movimentação da asa do passaro (animação)
-		variacao += Gdx.graphics.getDeltaTime() * 10;
 
-		//Limitando a variação do passaro
-		if(variacao > 3)
-			variacao = 0;
 
-		gravidade++;
+
+
 		//Realiza o aumento da variavel para a movimentação
-		movimentaX++;
+		//movimentaX++;
 	}
 
 	private void validarPontos() {
@@ -185,6 +220,12 @@ public class jogo extends ApplicationAdapter {
 				passouCano = true;
 			}
 		}
+		//Realiza a movimentação da asa do passaro (animação)
+		variacao += Gdx.graphics.getDeltaTime() * 10;
+
+		//Limitando a variação do passaro
+		if(variacao > 3)
+			variacao = 0;
 	}
 
 	private void desenharTexturas() {
@@ -201,6 +242,13 @@ public class jogo extends ApplicationAdapter {
 
 		// realiza o desenho dos pontos na tela
 		textoPontuacao.draw(batch, String.valueOf(pontos), larguraDispositivo / 2, alturaDispositivo - 100);
+
+		//Realiza o desenho quando de game over
+		if(estadoJogo == 2) {
+			batch.draw(gameover, larguraDispositivo / 2 - gameover.getWidth() / 2, alturaDispositivo / 2);
+			textoReiniciar.draw(batch, "Toque na tela para Reiniciar!", larguraDispositivo / 2 - 250, alturaDispositivo / 2 - gameover.getHeight() / 2);
+			textoMelhorPontuacao.draw(batch, "Sua melhor pontuação é: 0 Pontos!", larguraDispositivo / 2 -200, alturaDispositivo / 2 - gameover.getHeight() * 2);
+		}
 
 		//fim da renderização
 		batch.end();
